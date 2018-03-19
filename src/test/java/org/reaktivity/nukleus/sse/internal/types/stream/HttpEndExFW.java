@@ -41,50 +41,38 @@ public final class HttpEndExFW extends Flyweight {
 
     private static final int FIELD_COUNT = 1;
 
-    @SuppressWarnings("serial")
-    private static final BitSet FIELDS_WITH_DEFAULTS = new BitSet(FIELD_COUNT)  {
-        {
-        set(INDEX_TRAILERS);
-      }
-    }
-    ;
-
-    private static final String[] FIELD_NAMES = {
-      "trailers"
-    };
+    private int lastFieldSet = -1;
 
     private final ListFW.Builder<HttpHeaderFW.Builder, HttpHeaderFW> trailersRW = new ListFW.Builder<HttpHeaderFW.Builder, HttpHeaderFW>(new HttpHeaderFW.Builder(), new HttpHeaderFW());
 
-    private final BitSet fieldsSet = new BitSet(FIELD_COUNT);
 
     public Builder() {
       super(new HttpEndExFW());
     }
 
     public Builder trailers(Consumer<ListFW.Builder<HttpHeaderFW.Builder, HttpHeaderFW>> mutator) {
-      checkFieldNotSet(INDEX_TRAILERS);
-      checkFieldsSet(0, INDEX_TRAILERS);
+      assert lastFieldSet == INDEX_TRAILERS - 1;
       ListFW.Builder<HttpHeaderFW.Builder, HttpHeaderFW> trailersRW = this.trailersRW.wrap(buffer(), limit(), maxLimit());
       mutator.accept(trailersRW);
       limit(trailersRW.build().limit());
-      fieldsSet.set(INDEX_TRAILERS);
+      lastFieldSet = INDEX_TRAILERS;
       return this;
     }
 
     public Builder trailersItem(Consumer<HttpHeaderFW.Builder> mutator) {
-      checkFieldsSet(0, INDEX_TRAILERS);
-      if (!fieldsSet.get(INDEX_TRAILERS)) {
+      assert lastFieldSet == INDEX_TRAILERS - 1;
+      if (lastFieldSet < INDEX_TRAILERS) {
         ListFW.Builder<HttpHeaderFW.Builder, HttpHeaderFW> trailersRW = this.trailersRW.wrap(buffer(), limit(), maxLimit());
       }
       trailersRW.item(mutator);
       limit(trailersRW.build().limit());
-      fieldsSet.set(INDEX_TRAILERS);
+      lastFieldSet = INDEX_TRAILERS;
       return this;
     }
 
     @Override
     public Builder wrap(MutableDirectBuffer buffer, int offset, int maxLimit) {
-      fieldsSet.clear();
+      lastFieldSet = -1;
       super.wrap(buffer, offset, maxLimit);
       limit(offset);
       return this;
@@ -92,28 +80,13 @@ public final class HttpEndExFW extends Flyweight {
 
     @Override
     public HttpEndExFW build() {
-      if (!fieldsSet.get(INDEX_TRAILERS)) {
+      if (lastFieldSet < INDEX_TRAILERS) {
         trailers(b -> { });
       }
-      checkFieldsSet(0, FIELD_COUNT);
-      fieldsSet.clear();
+      assert lastFieldSet == FIELD_COUNT - 1;
+      lastFieldSet = -1;
       return super.build();
     }
 
-    private void checkFieldNotSet(int index) {
-      if (fieldsSet.get(index)) {
-        throw new IllegalStateException(String.format("Field \"%s\" has already been set", FIELD_NAMES[index]));
-      }
-    }
-
-    private void checkFieldsSet(int fromIndex, int toIndex) {
-      int fieldNotSet = fromIndex - 1;
-      do {
-        fieldNotSet = fieldsSet.nextClearBit(fieldNotSet + 1);
-      } while (fieldNotSet < toIndex && FIELDS_WITH_DEFAULTS.get(fieldNotSet));
-      if (fieldNotSet < toIndex) {
-        throw new IllegalStateException(String.format("Required field \"%s\" is not set", FIELD_NAMES[fieldNotSet]));
-      }
-    }
   }
 }

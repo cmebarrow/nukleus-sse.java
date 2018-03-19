@@ -62,50 +62,36 @@ public final class SseDataExFW extends Flyweight {
 
     private static final int FIELD_COUNT = 3;
 
-    @SuppressWarnings("serial")
-    private static final BitSet FIELDS_WITH_DEFAULTS = new BitSet(FIELD_COUNT)  {
-        {
-      }
-    }
-    ;
-
-    private static final String[] FIELD_NAMES = {
-      "timestamp",
-      "id",
-      "type"
-    };
+    private int lastFieldSet = -1;
 
     private final StringFW.Builder idRW = new StringFW.Builder();
 
     private final StringFW.Builder typeRW = new StringFW.Builder();
 
-    private final BitSet fieldsSet = new BitSet(FIELD_COUNT);
 
     public Builder() {
       super(new SseDataExFW());
     }
 
     public Builder timestamp(long value) {
-      checkFieldNotSet(INDEX_TIMESTAMP);
-      checkFieldsSet(0, INDEX_TIMESTAMP);
+      assert lastFieldSet == INDEX_TIMESTAMP - 1;
       int newLimit = limit() + FIELD_SIZE_TIMESTAMP;
       checkLimit(newLimit, maxLimit());
       buffer().putLong(limit(), value);
-      fieldsSet.set(INDEX_TIMESTAMP);
+      lastFieldSet = INDEX_TIMESTAMP;
       limit(newLimit);
       return this;
     }
 
     private StringFW.Builder id() {
-      checkFieldNotSet(INDEX_ID);
-      checkFieldsSet(0, INDEX_ID);
+      assert lastFieldSet == INDEX_ID - 1;
       return idRW.wrap(buffer(), limit(), maxLimit());
     }
 
     public Builder id(String value) {
       StringFW.Builder idRW = id();
       idRW.set(value, StandardCharsets.UTF_8);
-      fieldsSet.set(INDEX_ID);
+      lastFieldSet = INDEX_ID;
       limit(idRW.build().limit());
       return this;
     }
@@ -113,7 +99,7 @@ public final class SseDataExFW extends Flyweight {
     public Builder id(StringFW value) {
       StringFW.Builder idRW = id();
       idRW.set(value);
-      fieldsSet.set(INDEX_ID);
+      lastFieldSet = INDEX_ID;
       limit(idRW.build().limit());
       return this;
     }
@@ -121,21 +107,20 @@ public final class SseDataExFW extends Flyweight {
     public Builder id(DirectBuffer buffer, int offset, int length) {
       StringFW.Builder idRW = id();
       idRW.set(buffer, offset, length);
-      fieldsSet.set(INDEX_ID);
+      lastFieldSet = INDEX_ID;
       limit(idRW.build().limit());
       return this;
     }
 
     private StringFW.Builder type() {
-      checkFieldNotSet(INDEX_TYPE);
-      checkFieldsSet(0, INDEX_TYPE);
+      assert lastFieldSet == INDEX_TYPE - 1;
       return typeRW.wrap(buffer(), limit(), maxLimit());
     }
 
     public Builder type(String value) {
       StringFW.Builder typeRW = type();
       typeRW.set(value, StandardCharsets.UTF_8);
-      fieldsSet.set(INDEX_TYPE);
+      lastFieldSet = INDEX_TYPE;
       limit(typeRW.build().limit());
       return this;
     }
@@ -143,7 +128,7 @@ public final class SseDataExFW extends Flyweight {
     public Builder type(StringFW value) {
       StringFW.Builder typeRW = type();
       typeRW.set(value);
-      fieldsSet.set(INDEX_TYPE);
+      lastFieldSet = INDEX_TYPE;
       limit(typeRW.build().limit());
       return this;
     }
@@ -151,14 +136,14 @@ public final class SseDataExFW extends Flyweight {
     public Builder type(DirectBuffer buffer, int offset, int length) {
       StringFW.Builder typeRW = type();
       typeRW.set(buffer, offset, length);
-      fieldsSet.set(INDEX_TYPE);
+      lastFieldSet = INDEX_TYPE;
       limit(typeRW.build().limit());
       return this;
     }
 
     @Override
     public Builder wrap(MutableDirectBuffer buffer, int offset, int maxLimit) {
-      fieldsSet.clear();
+      lastFieldSet = -1;
       super.wrap(buffer, offset, maxLimit);
       limit(offset);
       return this;
@@ -166,25 +151,10 @@ public final class SseDataExFW extends Flyweight {
 
     @Override
     public SseDataExFW build() {
-      checkFieldsSet(0, FIELD_COUNT);
-      fieldsSet.clear();
+      assert lastFieldSet == FIELD_COUNT - 1;
+      lastFieldSet = -1;
       return super.build();
     }
 
-    private void checkFieldNotSet(int index) {
-      if (fieldsSet.get(index)) {
-        throw new IllegalStateException(String.format("Field \"%s\" has already been set", FIELD_NAMES[index]));
-      }
-    }
-
-    private void checkFieldsSet(int fromIndex, int toIndex) {
-      int fieldNotSet = fromIndex - 1;
-      do {
-        fieldNotSet = fieldsSet.nextClearBit(fieldNotSet + 1);
-      } while (fieldNotSet < toIndex && FIELDS_WITH_DEFAULTS.get(fieldNotSet));
-      if (fieldNotSet < toIndex) {
-        throw new IllegalStateException(String.format("Required field \"%s\" is not set", FIELD_NAMES[fieldNotSet]));
-      }
-    }
   }
 }

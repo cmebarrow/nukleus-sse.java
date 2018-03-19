@@ -69,7 +69,7 @@ public final class DataFW extends Flyweight {
   }
 
   public int flags() {
-    return (int)(buffer().getByte(offset() + FIELD_OFFSET_FLAGS) & 0xFF);
+    return buffer().getByte(offset() + FIELD_OFFSET_FLAGS) & 0xFF;
   }
 
   public long groupId() {
@@ -99,7 +99,7 @@ public final class DataFW extends Flyweight {
   @Override
   public DataFW wrap(DirectBuffer buffer, int offset, int maxLimit) {
     super.wrap(buffer, offset, maxLimit);
-    payloadRO.wrap(buffer, offset + FIELD_OFFSET_PAYLOAD, offset + FIELD_OFFSET_PAYLOAD + ((int) length() == -1 ? 0 : (int) length()));
+    payloadRO.wrap(buffer, offset + FIELD_OFFSET_PAYLOAD, offset + FIELD_OFFSET_PAYLOAD + (length() == -1 ? 0 : (int) length()));
     extensionRO.wrap(buffer, payloadRO.limit() + FIELD_OFFSET_EXTENSION, maxLimit);
     checkLimit(limit(), maxLimit);
     return this;
@@ -148,31 +148,7 @@ public final class DataFW extends Flyweight {
 
     private static final int FIELD_COUNT = 10;
 
-    @SuppressWarnings("serial")
-    private static final BitSet FIELDS_WITH_DEFAULTS = new BitSet(FIELD_COUNT)  {
-        {
-        set(INDEX_TIMESTAMP);
-        set(INDEX_TRACE);
-        set(INDEX_AUTHORIZATION);
-        set(INDEX_FLAGS);
-        set(INDEX_LENGTH);
-        set(INDEX_EXTENSION);
-      }
-    }
-    ;
-
-    private static final String[] FIELD_NAMES = {
-      "streamId",
-      "timestamp",
-      "trace",
-      "authorization",
-      "flags",
-      "groupId",
-      "padding",
-      "length",
-      "payload",
-      "extension"
-    };
+    private int lastFieldSet = -1;
 
     private int dynamicOffsetLength;
 
@@ -180,124 +156,115 @@ public final class DataFW extends Flyweight {
 
     private final OctetsFW.Builder extensionRW = new OctetsFW.Builder();
 
-    private final BitSet fieldsSet = new BitSet(FIELD_COUNT);
 
     public Builder() {
       super(new DataFW());
     }
 
     public Builder streamId(long value) {
-      checkFieldNotSet(INDEX_STREAM_ID);
-      checkFieldsSet(0, INDEX_STREAM_ID);
+      assert lastFieldSet == INDEX_STREAM_ID - 1;
       int newLimit = limit() + FIELD_SIZE_STREAM_ID;
       checkLimit(newLimit, maxLimit());
       buffer().putLong(limit(), value);
-      fieldsSet.set(INDEX_STREAM_ID);
+      lastFieldSet = INDEX_STREAM_ID;
       limit(newLimit);
       return this;
     }
 
     public Builder timestamp(long value) {
-      checkFieldNotSet(INDEX_TIMESTAMP);
-      checkFieldsSet(0, INDEX_TIMESTAMP);
+      assert lastFieldSet == INDEX_TIMESTAMP - 1;
       int newLimit = limit() + FIELD_SIZE_TIMESTAMP;
       checkLimit(newLimit, maxLimit());
       buffer().putLong(limit(), value);
-      fieldsSet.set(INDEX_TIMESTAMP);
+      lastFieldSet = INDEX_TIMESTAMP;
       limit(newLimit);
       return this;
     }
 
     public Builder trace(long value) {
-      checkFieldNotSet(INDEX_TRACE);
-      if (!fieldsSet.get(INDEX_TIMESTAMP)) {
+      if (lastFieldSet < INDEX_TIMESTAMP) {
         timestamp(DEFAULT_TIMESTAMP);
       }
-      checkFieldsSet(0, INDEX_TRACE);
+      assert lastFieldSet == INDEX_TRACE - 1;
       int newLimit = limit() + FIELD_SIZE_TRACE;
       checkLimit(newLimit, maxLimit());
       buffer().putLong(limit(), value);
-      fieldsSet.set(INDEX_TRACE);
+      lastFieldSet = INDEX_TRACE;
       limit(newLimit);
       return this;
     }
 
     public Builder authorization(long value) {
-      checkFieldNotSet(INDEX_AUTHORIZATION);
-      if (!fieldsSet.get(INDEX_TRACE)) {
+      if (lastFieldSet < INDEX_TRACE) {
         trace(DEFAULT_TRACE);
       }
-      checkFieldsSet(0, INDEX_AUTHORIZATION);
+      assert lastFieldSet == INDEX_AUTHORIZATION - 1;
       int newLimit = limit() + FIELD_SIZE_AUTHORIZATION;
       checkLimit(newLimit, maxLimit());
       buffer().putLong(limit(), value);
-      fieldsSet.set(INDEX_AUTHORIZATION);
+      lastFieldSet = INDEX_AUTHORIZATION;
       limit(newLimit);
       return this;
     }
 
     public Builder flags(int value) {
-      checkFieldNotSet(INDEX_FLAGS);
       if (value < 0) {
         throw new IllegalArgumentException(String.format("Value %d too low for field \"flags\"", value));
       }
       if (value > 0XFF) {
         throw new IllegalArgumentException(String.format("Value %d too high for field \"flags\"", value));
       }
-      if (!fieldsSet.get(INDEX_AUTHORIZATION)) {
+      if (lastFieldSet < INDEX_AUTHORIZATION) {
         authorization(DEFAULT_AUTHORIZATION);
       }
-      checkFieldsSet(0, INDEX_FLAGS);
+      assert lastFieldSet == INDEX_FLAGS - 1;
       int newLimit = limit() + FIELD_SIZE_FLAGS;
       checkLimit(newLimit, maxLimit());
       buffer().putByte(limit(), (byte)(value & 0xFF));
-      fieldsSet.set(INDEX_FLAGS);
+      lastFieldSet = INDEX_FLAGS;
       limit(newLimit);
       return this;
     }
 
     public Builder groupId(long value) {
-      checkFieldNotSet(INDEX_GROUP_ID);
-      if (!fieldsSet.get(INDEX_FLAGS)) {
+      if (lastFieldSet < INDEX_FLAGS) {
         flags(DEFAULT_FLAGS);
       }
-      checkFieldsSet(0, INDEX_GROUP_ID);
+      assert lastFieldSet == INDEX_GROUP_ID - 1;
       int newLimit = limit() + FIELD_SIZE_GROUP_ID;
       checkLimit(newLimit, maxLimit());
       buffer().putLong(limit(), value);
-      fieldsSet.set(INDEX_GROUP_ID);
+      lastFieldSet = INDEX_GROUP_ID;
       limit(newLimit);
       return this;
     }
 
     public Builder padding(int value) {
-      checkFieldNotSet(INDEX_PADDING);
-      checkFieldsSet(0, INDEX_PADDING);
+      assert lastFieldSet == INDEX_PADDING - 1;
       int newLimit = limit() + FIELD_SIZE_PADDING;
       checkLimit(newLimit, maxLimit());
       buffer().putInt(limit(), value);
-      fieldsSet.set(INDEX_PADDING);
+      lastFieldSet = INDEX_PADDING;
       limit(newLimit);
       return this;
     }
 
     private Builder length(int value) {
-      checkFieldsSet(0, INDEX_LENGTH);
+      assert lastFieldSet == INDEX_LENGTH - 1;
       int newLimit = limit() + FIELD_SIZE_LENGTH;
       checkLimit(newLimit, maxLimit());
       buffer().putInt(limit(), value);
       dynamicOffsetLength = limit();
-      fieldsSet.set(INDEX_LENGTH);
+      lastFieldSet = INDEX_LENGTH;
       limit(newLimit);
       return this;
     }
 
     private OctetsFW.Builder payload() {
-      checkFieldNotSet(INDEX_PAYLOAD);
-      if (!fieldsSet.get(INDEX_LENGTH)) {
+      if (lastFieldSet < INDEX_LENGTH) {
         length(DEFAULT_LENGTH);
       }
-      checkFieldsSet(0, INDEX_PAYLOAD);
+      assert lastFieldSet == INDEX_PAYLOAD - 1;
       return payloadRW.wrap(buffer(), limit(), maxLimit());
     }
 
@@ -316,7 +283,7 @@ public final class DataFW extends Flyweight {
       limit(dynamicOffsetLength);
       length(size$);
       limit(newLimit);
-      fieldsSet.set(INDEX_PAYLOAD);
+      lastFieldSet = INDEX_PAYLOAD;
       return this;
     }
 
@@ -328,7 +295,7 @@ public final class DataFW extends Flyweight {
       limit(dynamicOffsetLength);
       length(size$);
       limit(newLimit);
-      fieldsSet.set(INDEX_PAYLOAD);
+      lastFieldSet = INDEX_PAYLOAD;
       return this;
     }
 
@@ -340,20 +307,19 @@ public final class DataFW extends Flyweight {
       limit(dynamicOffsetLength);
       length(size$);
       limit(newLimit);
-      fieldsSet.set(INDEX_PAYLOAD);
+      lastFieldSet = INDEX_PAYLOAD;
       return this;
     }
 
     private OctetsFW.Builder extension() {
-      checkFieldNotSet(INDEX_EXTENSION);
-      if (!fieldsSet.get(INDEX_PAYLOAD)) {
+      if (lastFieldSet < INDEX_PAYLOAD) {
         payload(b -> { });
         int limit = limit();
         limit(dynamicOffsetLength);
         length(-1);
         limit(limit);
       }
-      checkFieldsSet(0, INDEX_EXTENSION);
+      assert lastFieldSet == INDEX_EXTENSION - 1;
       return extensionRW.wrap(buffer(), limit(), maxLimit());
     }
 
@@ -361,7 +327,7 @@ public final class DataFW extends Flyweight {
       OctetsFW.Builder extensionRW = extension();
       extensionRW.set(value);
       limit(extensionRW.build().limit());
-      fieldsSet.set(INDEX_EXTENSION);
+      lastFieldSet = INDEX_EXTENSION;
       return this;
     }
 
@@ -369,7 +335,7 @@ public final class DataFW extends Flyweight {
       OctetsFW.Builder extensionRW = extension();
       mutator.accept(extensionRW);
       limit(extensionRW.build().limit());
-      fieldsSet.set(INDEX_EXTENSION);
+      lastFieldSet = INDEX_EXTENSION;
       return this;
     }
 
@@ -377,13 +343,13 @@ public final class DataFW extends Flyweight {
       OctetsFW.Builder extensionRW = extension();
       extensionRW.set(buffer, offset, length);
       limit(extensionRW.build().limit());
-      fieldsSet.set(INDEX_EXTENSION);
+      lastFieldSet = INDEX_EXTENSION;
       return this;
     }
 
     @Override
     public Builder wrap(MutableDirectBuffer buffer, int offset, int maxLimit) {
-      fieldsSet.clear();
+      lastFieldSet = -1;
       super.wrap(buffer, offset, maxLimit);
       limit(offset);
       return this;
@@ -391,28 +357,13 @@ public final class DataFW extends Flyweight {
 
     @Override
     public DataFW build() {
-      if (!fieldsSet.get(INDEX_EXTENSION)) {
+      if (lastFieldSet < INDEX_EXTENSION) {
         extension(b -> { });
       }
-      checkFieldsSet(0, FIELD_COUNT);
-      fieldsSet.clear();
+      assert lastFieldSet == FIELD_COUNT - 1;
+      lastFieldSet = -1;
       return super.build();
     }
 
-    private void checkFieldNotSet(int index) {
-      if (fieldsSet.get(index)) {
-        throw new IllegalStateException(String.format("Field \"%s\" has already been set", FIELD_NAMES[index]));
-      }
-    }
-
-    private void checkFieldsSet(int fromIndex, int toIndex) {
-      int fieldNotSet = fromIndex - 1;
-      do {
-        fieldNotSet = fieldsSet.nextClearBit(fieldNotSet + 1);
-      } while (fieldNotSet < toIndex && FIELDS_WITH_DEFAULTS.get(fieldNotSet));
-      if (fieldNotSet < toIndex) {
-        throw new IllegalStateException(String.format("Required field \"%s\" is not set", FIELD_NAMES[fieldNotSet]));
-      }
-    }
   }
 }

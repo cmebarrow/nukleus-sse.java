@@ -51,38 +51,26 @@ public final class SseBeginExFW extends Flyweight {
 
     private static final int FIELD_COUNT = 2;
 
-    @SuppressWarnings("serial")
-    private static final BitSet FIELDS_WITH_DEFAULTS = new BitSet(FIELD_COUNT)  {
-        {
-      }
-    }
-    ;
-
-    private static final String[] FIELD_NAMES = {
-      "pathInfo",
-      "lastEventId"
-    };
+    private int lastFieldSet = -1;
 
     private final StringFW.Builder pathInfoRW = new StringFW.Builder();
 
     private final StringFW.Builder lastEventIdRW = new StringFW.Builder();
 
-    private final BitSet fieldsSet = new BitSet(FIELD_COUNT);
 
     public Builder() {
       super(new SseBeginExFW());
     }
 
     private StringFW.Builder pathInfo() {
-      checkFieldNotSet(INDEX_PATH_INFO);
-      checkFieldsSet(0, INDEX_PATH_INFO);
+      assert lastFieldSet == INDEX_PATH_INFO - 1;
       return pathInfoRW.wrap(buffer(), limit(), maxLimit());
     }
 
     public Builder pathInfo(String value) {
       StringFW.Builder pathInfoRW = pathInfo();
       pathInfoRW.set(value, StandardCharsets.UTF_8);
-      fieldsSet.set(INDEX_PATH_INFO);
+      lastFieldSet = INDEX_PATH_INFO;
       limit(pathInfoRW.build().limit());
       return this;
     }
@@ -90,7 +78,7 @@ public final class SseBeginExFW extends Flyweight {
     public Builder pathInfo(StringFW value) {
       StringFW.Builder pathInfoRW = pathInfo();
       pathInfoRW.set(value);
-      fieldsSet.set(INDEX_PATH_INFO);
+      lastFieldSet = INDEX_PATH_INFO;
       limit(pathInfoRW.build().limit());
       return this;
     }
@@ -98,21 +86,20 @@ public final class SseBeginExFW extends Flyweight {
     public Builder pathInfo(DirectBuffer buffer, int offset, int length) {
       StringFW.Builder pathInfoRW = pathInfo();
       pathInfoRW.set(buffer, offset, length);
-      fieldsSet.set(INDEX_PATH_INFO);
+      lastFieldSet = INDEX_PATH_INFO;
       limit(pathInfoRW.build().limit());
       return this;
     }
 
     private StringFW.Builder lastEventId() {
-      checkFieldNotSet(INDEX_LAST_EVENT_ID);
-      checkFieldsSet(0, INDEX_LAST_EVENT_ID);
+      assert lastFieldSet == INDEX_LAST_EVENT_ID - 1;
       return lastEventIdRW.wrap(buffer(), limit(), maxLimit());
     }
 
     public Builder lastEventId(String value) {
       StringFW.Builder lastEventIdRW = lastEventId();
       lastEventIdRW.set(value, StandardCharsets.UTF_8);
-      fieldsSet.set(INDEX_LAST_EVENT_ID);
+      lastFieldSet = INDEX_LAST_EVENT_ID;
       limit(lastEventIdRW.build().limit());
       return this;
     }
@@ -120,7 +107,7 @@ public final class SseBeginExFW extends Flyweight {
     public Builder lastEventId(StringFW value) {
       StringFW.Builder lastEventIdRW = lastEventId();
       lastEventIdRW.set(value);
-      fieldsSet.set(INDEX_LAST_EVENT_ID);
+      lastFieldSet = INDEX_LAST_EVENT_ID;
       limit(lastEventIdRW.build().limit());
       return this;
     }
@@ -128,14 +115,14 @@ public final class SseBeginExFW extends Flyweight {
     public Builder lastEventId(DirectBuffer buffer, int offset, int length) {
       StringFW.Builder lastEventIdRW = lastEventId();
       lastEventIdRW.set(buffer, offset, length);
-      fieldsSet.set(INDEX_LAST_EVENT_ID);
+      lastFieldSet = INDEX_LAST_EVENT_ID;
       limit(lastEventIdRW.build().limit());
       return this;
     }
 
     @Override
     public Builder wrap(MutableDirectBuffer buffer, int offset, int maxLimit) {
-      fieldsSet.clear();
+      lastFieldSet = -1;
       super.wrap(buffer, offset, maxLimit);
       limit(offset);
       return this;
@@ -143,25 +130,10 @@ public final class SseBeginExFW extends Flyweight {
 
     @Override
     public SseBeginExFW build() {
-      checkFieldsSet(0, FIELD_COUNT);
-      fieldsSet.clear();
+      assert lastFieldSet == FIELD_COUNT - 1;
+      lastFieldSet = -1;
       return super.build();
     }
 
-    private void checkFieldNotSet(int index) {
-      if (fieldsSet.get(index)) {
-        throw new IllegalStateException(String.format("Field \"%s\" has already been set", FIELD_NAMES[index]));
-      }
-    }
-
-    private void checkFieldsSet(int fromIndex, int toIndex) {
-      int fieldNotSet = fromIndex - 1;
-      do {
-        fieldNotSet = fieldsSet.nextClearBit(fieldNotSet + 1);
-      } while (fieldNotSet < toIndex && FIELDS_WITH_DEFAULTS.get(fieldNotSet));
-      if (fieldNotSet < toIndex) {
-        throw new IllegalStateException(String.format("Required field \"%s\" is not set", FIELD_NAMES[fieldNotSet]));
-      }
-    }
   }
 }
