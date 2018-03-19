@@ -138,15 +138,13 @@ public final class DataFW extends Flyweight {
 
     private static final int INDEX_PADDING = 6;
 
-    private static final int INDEX_LENGTH = 7;
-
     private static final int DEFAULT_LENGTH = 0;
 
-    private static final int INDEX_PAYLOAD = 8;
+    private static final int INDEX_PAYLOAD = 7;
 
-    private static final int INDEX_EXTENSION = 9;
+    private static final int INDEX_EXTENSION = 8;
 
-    private static final int FIELD_COUNT = 10;
+    private static final int FIELD_COUNT = 9;
 
     private int lastFieldSet = -1;
 
@@ -250,21 +248,17 @@ public final class DataFW extends Flyweight {
     }
 
     private Builder length(int value) {
-      assert lastFieldSet == INDEX_LENGTH - 1;
       int newLimit = limit() + FIELD_SIZE_LENGTH;
       checkLimit(newLimit, maxLimit());
       buffer().putInt(limit(), value);
       dynamicOffsetLength = limit();
-      lastFieldSet = INDEX_LENGTH;
       limit(newLimit);
       return this;
     }
 
     private OctetsFW.Builder payload() {
-      if (lastFieldSet < INDEX_LENGTH) {
-        length(DEFAULT_LENGTH);
-      }
       assert lastFieldSet == INDEX_PAYLOAD - 1;
+      length(DEFAULT_LENGTH);
       return payloadRW.wrap(buffer(), limit(), maxLimit());
     }
 
